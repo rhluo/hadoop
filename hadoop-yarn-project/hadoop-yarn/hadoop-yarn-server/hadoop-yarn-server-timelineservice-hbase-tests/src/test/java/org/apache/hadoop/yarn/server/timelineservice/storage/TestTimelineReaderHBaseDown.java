@@ -18,9 +18,9 @@
 package org.apache.hadoop.yarn.server.timelineservice.storage;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.GenericTestUtils;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.service.Service;
-import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.yarn.api.records.timelineservice.TimelineEntity;
 import org.apache.hadoop.yarn.api.records.timelineservice.TimelineEntityType;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
