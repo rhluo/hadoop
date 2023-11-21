@@ -135,6 +135,8 @@ public interface HdfsServerConstants {
   }
 
   /** Startup options */
+  //HDFS作为中心化的分布式文件系统，升级过程需要用户显示通过命令行操作中心节点
+  //ES作为去中心化的OLAP引擎，升级过程不需要用户操作中心节点，但是需要用户通过更小粒度(分片粒度)的控制升级过程
   enum StartupOption{
     FORMAT  ("-format"),
     CLUSTERID ("-clusterid"),

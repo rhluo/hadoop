@@ -450,7 +450,9 @@ public class NameNode extends ReconfigurableBase implements
 
   public static final String METRICS_LOG_NAME = "NameNodeMetricsLog";
 
-  protected FSNamesystem namesystem; 
+  //操作hdfs文件系统的类
+  protected FSNamesystem namesystem;
+  //当前节点的角色，active或者备选
   protected final NamenodeRole role;
   private volatile HAState state;
   private final boolean haEnabled;
@@ -470,7 +472,8 @@ public class NameNode extends ReconfigurableBase implements
   protected NamenodeRegistration nodeRegistration;
   /** Activated plug-ins. */
   private List<ServicePlugin> plugins;
-  
+
+  //RPC服务器，负责DFSClient，DataNode和NameNode之间的通信
   private NameNodeRpcServer rpcServer;
 
   private JvmPauseMonitor pauseMonitor;
@@ -895,12 +898,15 @@ public class NameNode extends ReconfigurableBase implements
     }
 
     if (NamenodeRole.NAMENODE == role) {
+      //启动http服务器，启动后可以通过http://namenode:50070 访问hdfs的管理页面
       startHttpServer(conf);
     }
 
+    //从fsimage和edits log中加载元数据
     loadNamesystem(conf);
     startAliasMapServerIfNecessary(conf);
 
+    //创建RPCServer，默认rpc线程数是10，默认端口8020
     rpcServer = createRpcServer(conf);
 
     initReconfigurableBackoffKey();
@@ -1847,6 +1853,7 @@ public class NameNode extends ReconfigurableBase implements
       StartupOption.METADATAVERSION, fs, null);
   }
 
+  //NameNode构造方法，负责加载启动NameNode
   public static NameNode createNameNode(String argv[], Configuration conf)
       throws IOException {
     LOG.info("createNameNode " + Arrays.asList(argv));
@@ -1865,7 +1872,7 @@ public class NameNode extends ReconfigurableBase implements
 
     boolean aborted = false;
     switch (startOpt) {
-    case FORMAT:
+    case FORMAT: //首次启动NameNode要格式化，或者重新初始化NameNode
       aborted = format(conf, startOpt.getForceFormat(),
           startOpt.getInteractiveFormat());
       terminate(aborted ? 1 : 0);
@@ -1909,6 +1916,7 @@ public class NameNode extends ReconfigurableBase implements
       return null;
     default:
       DefaultMetricsSystem.initialize("NameNode");
+      //创建NameNode对象，接着会执行initialize方法初始化
       return new NameNode(conf);
     }
   }
