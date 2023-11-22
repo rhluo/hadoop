@@ -542,7 +542,9 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   private final boolean auditLogWithRemotePort;
 
   /** The namespace tree. */
+  //存储文件树，内存的
   FSDirectory dir;
+  //BlocksMap类维护块（Block）到其元数据的映射表，元数据信息包括块所属的inode、存储块的Datanode
   private BlockManager blockManager;
   private final SnapshotManager snapshotManager;
   private final SnapshotDeletionGc snapshotDeletionGc;
@@ -559,14 +561,18 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
    */
   private volatile boolean needRollbackFsImage;
 
+  //对文件的租约进行管理
   final LeaseManager leaseManager = new LeaseManager(this); 
 
+  //NameNode资源检查，如果磁盘水位不够则进入安全模式
   Daemon nnrmthread = null; // NamenodeResourceMonitor thread
 
+  //editLog定期异步刷盘
   Daemon nnEditLogRoller = null; // NameNodeEditLogRoller thread
 
   // A daemon to periodically clean up corrupt lazyPersist files
   // from the name space.
+  //定期后台清理损坏的文件
   Daemon lazyPersistFileScrubber = null;
   /**
    * Timestamp marking the end time of {@link #lazyPersistFileScrubber}'s full
@@ -820,6 +826,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
   static FSNamesystem loadFromDisk(Configuration conf) throws IOException {
 
     checkConfiguration(conf);
+    //从fsimage和editsLog中加载元数据信息
     FSImage fsImage = new FSImage(conf,
         FSNamesystem.getNamespaceDirs(conf),
         FSNamesystem.getNamespaceEditsDirs(conf));
@@ -1035,6 +1042,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
           DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_DEFAULT);
 
       this.dtSecretManager = createDelegationTokenSecretManager(conf);
+      //初始化FSDir
       this.dir = new FSDirectory(this, conf);
       this.snapshotManager = new SnapshotManager(conf, dir);
       this.snapshotDeletionGc = snapshotManager.isSnapshotDeletionOrdered()?
@@ -1256,13 +1264,14 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     return Collections.unmodifiableList(auditLoggers);
   }
 
+  //FSNamesystem在初始化完FSDirectory dir成员，会调用loadFSImage方法，从fsimage和edits加载元数据信息
   void loadFSImage(StartupOption startOpt) throws IOException {
     final FSImage fsImage = getFSImage();
 
     // format before starting up if requested
     if (startOpt == StartupOption.FORMAT) {
       // reuse current id
-      fsImage.format(this, fsImage.getStorage().determineClusterId(), false);
+      fsImage.format(this, fsImage.getStorage().determineClusterId(), false);// 对FSImage执行格式化操作
 
       startOpt = StartupOption.REGULAR;
     }
@@ -1272,7 +1281,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       // We shouldn't be calling saveNamespace if we've come up in standby state.
       MetaRecoveryContext recovery = startOpt.createRecoveryContext();
       final boolean staleImage
-          = fsImage.recoverTransitionRead(startOpt, this, recovery);
+          = fsImage.recoverTransitionRead(startOpt, this, recovery);// 根据启动选项及其对应存储目录(${dfs.name.dir})，分析存储目录，必要的话从先前的事务恢复过来
       if (RollingUpgradeStartupOption.ROLLBACK.matches(startOpt)) {
         rollingUpgradeInfo = null;
       }

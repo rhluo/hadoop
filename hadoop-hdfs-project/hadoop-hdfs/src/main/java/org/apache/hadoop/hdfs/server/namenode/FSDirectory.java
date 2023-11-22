@@ -153,6 +153,7 @@ public class FSDirectory implements Closeable {
         .isdir(true)
         .build();
 
+  //hdfs的根目录
   INodeDirectory rootDir;
   private final FSNamesystem namesystem;
   private volatile boolean skipQuotaCheck = false; //skip while consuming edits
